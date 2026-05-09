@@ -25,8 +25,8 @@ pub enum Outcome {
 }
 
 pub struct SelfUpdate {
-    pub repo: &'static str,    // "O6lvl4/gv"
-    pub bin_name: &'static str, // "gv"
+    pub repo: &'static str,            // "O6lvl4/gv"
+    pub bin_name: &'static str,        // "gv"
     pub current_version: &'static str, // env!("CARGO_PKG_VERSION")
 }
 
@@ -45,11 +45,16 @@ impl SelfUpdate {
         let release: GhRelease = client
             .get(&url)
             .header("Accept", "application/vnd.github+json")
-            .header("User-Agent", format!("{}/{}", self.bin_name, self.current_version))
-            .send().await
+            .header(
+                "User-Agent",
+                format!("{}/{}", self.bin_name, self.current_version),
+            )
+            .send()
+            .await
             .with_context(|| format!("GET {url}"))?
             .error_for_status()?
-            .json().await
+            .json()
+            .await
             .context("parse GitHub release JSON")?;
         Ok(release.tag_name)
     }
@@ -58,19 +63,24 @@ impl SelfUpdate {
     /// NewerAvailable without touching disk. Otherwise downloads + replaces.
     pub async fn run(&self, client: &reqwest::Client, check_only: bool) -> Result<UpdateInfo> {
         let latest_tag = self.latest_tag(client).await?;
-        let latest = latest_tag.strip_prefix('v').unwrap_or(&latest_tag).to_string();
+        let latest = latest_tag
+            .strip_prefix('v')
+            .unwrap_or(&latest_tag)
+            .to_string();
         let current = self.current_version.to_string();
 
         if !is_semver_newer(&latest, &current) {
             return Ok(UpdateInfo {
-                current, latest,
+                current,
+                latest,
                 outcome: Outcome::AlreadyUpToDate,
                 binary_path: None,
             });
         }
         if check_only {
             return Ok(UpdateInfo {
-                current, latest,
+                current,
+                latest,
                 outcome: Outcome::NewerAvailable,
                 binary_path: None,
             });
@@ -88,12 +98,20 @@ impl SelfUpdate {
             self.repo, latest_tag, archive_name
         );
 
-        let bytes = client.get(&url).send().await?.error_for_status()?.bytes().await?;
+        let bytes = client
+            .get(&url)
+            .send()
+            .await?
+            .error_for_status()?
+            .bytes()
+            .await?;
         let sha_text = client
             .get(format!("{url}.sha256"))
-            .send().await?
+            .send()
+            .await?
             .error_for_status()?
-            .text().await?;
+            .text()
+            .await?;
         let expected: String = sha_text.split_whitespace().next().unwrap_or("").to_string();
         let mut hasher = Sha256::new();
         hasher.update(&bytes);
@@ -115,14 +133,18 @@ impl SelfUpdate {
         };
         let new_exe = stage.join(&exe_name);
         if !new_exe.exists() {
-            bail!("extracted archive missing expected binary at {}", new_exe.display());
+            bail!(
+                "extracted archive missing expected binary at {}",
+                new_exe.display()
+            );
         }
 
         let current_exe = std::env::current_exe()?;
         replace_binary(&new_exe, &current_exe)?;
 
         Ok(UpdateInfo {
-            current, latest,
+            current,
+            latest,
             outcome: Outcome::Updated,
             binary_path: Some(current_exe),
         })

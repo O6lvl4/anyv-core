@@ -26,10 +26,14 @@ pub fn dir_size(path: &Path) -> Result<(u64, usize)> {
                 continue;
             }
             if meta.is_dir() {
-                if d == path { count += 1; }
+                if d == path {
+                    count += 1;
+                }
                 stack.push(p);
             } else {
-                if d == path { count += 1; }
+                if d == path {
+                    count += 1;
+                }
                 total += meta.len();
             }
         }
@@ -43,7 +47,9 @@ pub fn walk_files(root: &Path, max_depth: usize) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut stack: Vec<(PathBuf, usize)> = vec![(root.to_path_buf(), 0)];
     while let Some((dir, depth)) = stack.pop() {
-        let Ok(rd) = std::fs::read_dir(&dir) else { continue; };
+        let Ok(rd) = std::fs::read_dir(&dir) else {
+            continue;
+        };
         for entry in rd.flatten() {
             let p = entry.path();
             let name = entry.file_name().to_string_lossy().to_string();

@@ -20,8 +20,7 @@ pub fn extract_archive(archive: &Path, dest: &Path) -> Result<()> {
 }
 
 pub fn extract_tar_gz(archive: &Path, dest: &Path) -> Result<()> {
-    let f = std::fs::File::open(archive)
-        .with_context(|| format!("open {}", archive.display()))?;
+    let f = std::fs::File::open(archive).with_context(|| format!("open {}", archive.display()))?;
     let gz = flate2::read::GzDecoder::new(f);
     let mut tar = tar::Archive::new(gz);
     tar.set_preserve_permissions(true);
@@ -32,8 +31,7 @@ pub fn extract_tar_gz(archive: &Path, dest: &Path) -> Result<()> {
 }
 
 pub fn extract_zip(archive: &Path, dest: &Path) -> Result<()> {
-    let f = std::fs::File::open(archive)
-        .with_context(|| format!("open {}", archive.display()))?;
+    let f = std::fs::File::open(archive).with_context(|| format!("open {}", archive.display()))?;
     let mut zip = zip::ZipArchive::new(f).context("open zip")?;
     for i in 0..zip.len() {
         let mut entry = zip.by_index(i)?;

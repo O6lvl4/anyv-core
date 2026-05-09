@@ -14,7 +14,10 @@ use std::path::Path;
 ///   `Some(["gv", "x", "golangci-lint", "run"])`.
 pub fn rewrite_for_x_dispatch(app: &str) -> Option<Vec<OsString>> {
     let argv0 = std::env::args_os().next()?;
-    let stem = Path::new(&argv0).file_stem()?.to_string_lossy().into_owned();
+    let stem = Path::new(&argv0)
+        .file_stem()?
+        .to_string_lossy()
+        .into_owned();
     let expected = format!("{app}x");
     if stem != expected {
         return None;
